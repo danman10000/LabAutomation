@@ -9,22 +9,25 @@ import os.path
 USER_CONFIG="temp"
 SCRIPT_TO_RUN="auto_script.sh"
 TEMP_DIR="/tmp"
-'''
-IP_RANGE_A=192
-IP_RANGE_B=168
-IP_RANGE_C=168
-IP_RANGE_D=[1,30]
-'''
 
+
+# Example target IP setup. Each octet can be a range. Use a list to indicate the upper and lower bound inclusively
+# Example
+# IP_RANGE_A=192
+# IP_RANGE_B=168
+# IP_RANGE_C=168
+# IP_RANGE_D=[1,30]
 IP_RANGE_A=10
 IP_RANGE_B=4
 IP_RANGE_C=0
 IP_RANGE_D=185
 
+#Expand out a list similiar to the range function put make it IP friendly
+# lRange = Either a list of 2 elements corrisponding the lower and upper bound of a IP space or a single integer.
 def get_range(lRange):
-    if type(lRange)==int:
+    if type(lRange)==int and lRange >0 and lRange <256:
         return [str(lRange)]
-    elif type(lRange)==list and len(lRange)==2:
+    elif type(lRange)==list and len(lRange)==2 and lRange[0] > 0 and lRange[0] < lRange[1] and lRange[1] < 256:
         #Note that Range is not inclusive so add 1
         return [str(x) for x in range(lRange[0],lRange[1]+1)]
     else:
