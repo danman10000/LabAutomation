@@ -104,8 +104,11 @@ def do_ssh_runcmd():
             
             output = remote_conn.recv(5000)
             print output
-        remote_conn.send("nohup sh " + os.path.join(TEMP_DIR,sTmpFileName) + " && rm " + os.path.join(TEMP_DIR,sTmpFileName) + " && exit\n")
+        remote_conn.send("sudo nohup sh " + os.path.join(TEMP_DIR,sTmpFileName) + " && rm " + os.path.join(TEMP_DIR,sTmpFileName) + " && exit\n")
         #remote_conn.send("sh " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
+        # Wait for the command to complete
+        time.sleep(.5)
+        remote_conn.send(password + "\n")
         # Wait for the command to complete
         time.sleep(.5)
         output = remote_conn.recv(5000)
