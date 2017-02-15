@@ -10,6 +10,11 @@ USER_CONFIG="temp"
 SCRIPT_TO_RUN="auto_script.sh"
 TEMP_DIR="/tmp"
 
+#Allowed user types
+ROOT=1
+USER=2
+USERTYPES={"root"=ROOT,"user"=USER}
+
 
 # Example target IP setup. Each octet can be a range. Use a list to indicate the upper and lower bound inclusively
 # Example
@@ -49,7 +54,11 @@ def get_creds(login_section):
     config.read('password.conf')
     username=config.get(login_section, "username")
     password=config.get(login_section, "password")
-    return [username,password]
+    usertype=config.get(login_section, "type")
+    if usertype not in USERTYPES.keys():
+        print "User type incorrect in config file. Must be one of ", USERTYPES.keys()
+        exit()
+    return [username,password,usertype]
 
 def disable_paging(remote_conn):
     '''Disable paging on a Cisco router'''
@@ -68,7 +77,7 @@ def do_ssh_runcmd():
     
     sTmpFileName=str(uuid.uuid1())+".sh"
     for ip in get_ip_list():
-        username,password = get_creds(USER_CONFIG)
+        username,password,usertype = get_creds(USER_CONFIG)
 
         # Create instance of SSHClient object
         remote_conn_pre = paramiko.SSHClient()
@@ -104,7 +113,11 @@ def do_ssh_runcmd():
             
             output = remote_conn.recv(5000)
             print output
-        remote_conn.send("sudo nohup sh " + os.path.join(TEMP_DIR,sTmpFileName) + " && rm " + os.path.join(TEMP_DIR,sTmpFileName) + " && exit\n")
+        
+        sShCommand="nohup sh " + os.path.join(TEMP_DIR,sTmpFileName) + " && rm " + os.path.join(TEMP_DIR,sTmpFileName) + " && exit\n"
+        if USERTYPES[usertype]==ROOT:
+            sShCommand="set +o history && echo " password +"| sudo --stdin " + sShCommand
+        remote_conn.send(sShCommand)
         #remote_conn.send("sh " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
         # Wait for the command to complete
         time.sleep(.5)
