@@ -6,4 +6,5 @@ sudo iptables -A INPUT -p tcp -s 192.168.168.250 --dport 22 -m conntrack --ctsta
 sudo iptables -A OUTPUT -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
-apt-get -y install iptables-persistent
+#apt-get -y install iptables-persistent
+sudo iptables-save
