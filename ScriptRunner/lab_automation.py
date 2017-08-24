@@ -6,14 +6,14 @@ import uuid
 import os.path
 
 #USER_CONFIG="administrator"
-USER_CONFIG="temp"
+USER_CONFIG="administrator"
 SCRIPT_TO_RUN="auto_script.sh"
 TEMP_DIR="/tmp"
 
 #Allowed user types
 ROOT=1
 USER=2
-USERTYPES={"root"=ROOT,"user"=USER}
+USERTYPES={"root":ROOT,"user":USER}
 
 
 # Example target IP setup. Each octet can be a range. Use a list to indicate the upper and lower bound inclusively
@@ -22,10 +22,10 @@ USERTYPES={"root"=ROOT,"user"=USER}
 # IP_RANGE_B=168
 # IP_RANGE_C=168
 # IP_RANGE_D=[1,30]
-IP_RANGE_A=10
-IP_RANGE_B=4
-IP_RANGE_C=0
-IP_RANGE_D=185
+IP_RANGE_A=192
+IP_RANGE_B=168
+IP_RANGE_C=168
+IP_RANGE_D=[1,35]
 
 #Expand out a list similiar to the range function put make it IP friendly
 # lRange = Either a list of 2 elements corrisponding the lower and upper bound of a IP space or a single integer.
@@ -86,46 +86,53 @@ def do_ssh_runcmd():
         remote_conn_pre.set_missing_host_key_policy(
              paramiko.AutoAddPolicy())
 
-        # initiate SSH connection
-        remote_conn_pre.connect(ip, username=username, password=password, look_for_keys=False, allow_agent=False)
-        print "SSH connection established to %s" % ip
+        try:
 
-        # Use invoke_shell to establish an 'interactive session'
-        remote_conn = remote_conn_pre.invoke_shell()
-        print "Interactive SSH session established"
+            # initiate SSH connection
+            remote_conn_pre.connect(ip, username=username, password=password, look_for_keys=True, allow_agent=False, timeout=1)
+            print "SSH connection established to %s" % ip
 
-        # Strip the initial router prompt
-        output = remote_conn.recv(1000)
+            # Use invoke_shell to establish an 'interactive session'
+            remote_conn = remote_conn_pre.invoke_shell()
+            print "Interactive SSH session established"
 
-        # See what we have
-        print output
+            # Strip the initial router prompt
+            output = remote_conn.recv(1000)
 
-        # Turn off paging
-        #disable_paging(remote_conn)
+            # See what we have
+            print output
 
-        remote_conn.send("\n")
-        for sLine in sScript:
-            # Now let's try to send a command
-            remote_conn.send("echo " + sLine.strip() + " >> " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
+            # Turn off paging
+            #disable_paging(remote_conn)
 
-            # Wait for the command to complete
-            time.sleep(.5)
+            remote_conn.send("\n")
+            for sLine in sScript:
+                if not sLine.startswith("#"):
+                    # Now let's try to send a command
+                    remote_conn.send("echo '" + sLine.strip() + "' >> " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
+
+                    # Wait for the command to complete
+                    time.sleep(.5)
+                    
+                    output = remote_conn.recv(5000)
+                    print output
             
+            sShCommand="nohup sh " + os.path.join(TEMP_DIR,sTmpFileName) + " && rm " + os.path.join(TEMP_DIR,sTmpFileName) + " && exit\n"
+            if USERTYPES[usertype]==ROOT:
+                print "!!!!Executing as ROOT!!!!"
+                sShCommand="set +o history && echo '" + password + "' | sudo --stdin " + sShCommand
+            remote_conn.send(sShCommand)
+            #remote_conn.send("sh " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
+            # Wait for the command to complete
+            time.sleep(1)
+            #remote_conn.send(password + "\n")
+            # Wait for the command to complete
+            #time.sleep(3)
             output = remote_conn.recv(5000)
             print output
-        
-        sShCommand="nohup sh " + os.path.join(TEMP_DIR,sTmpFileName) + " && rm " + os.path.join(TEMP_DIR,sTmpFileName) + " && exit\n"
-        if USERTYPES[usertype]==ROOT:
-            sShCommand="set +o history && echo " password +"| sudo --stdin " + sShCommand
-        remote_conn.send(sShCommand)
-        #remote_conn.send("sh " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
-        # Wait for the command to complete
-        time.sleep(.5)
-        remote_conn.send(password + "\n")
-        # Wait for the command to complete
-        time.sleep(.5)
-        output = remote_conn.recv(5000)
-        print output
+        except:
+            print "!!!! Error connecting to " + ip
+            continue
 
 if __name__ == '__main__':
     do_ssh_runcmd()
