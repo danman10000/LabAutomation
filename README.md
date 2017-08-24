@@ -1,9 +1,10 @@
 # LabAutomation
 Tools that will be used to help automate a lab in an education environment.
 
-There are 2 components:
+There are 3 components:
 * ScriptRunner - a SSH automation script
 * Scripts - A user driven script for quick changes.
+* WoL - Wake on Lan scripts for the lab
 
 # ScriptRunner
 This is a SSH automation script that will automatically login to each IP within a range and execute a script. It can be execute using the following command:
@@ -14,4 +15,7 @@ Once executed it will leverage the credentials in the password.conf file or PKI 
 # Scripts
 This is a very simply scratch space used to rapidly deploy tools. It is meant to be execute by the user using the following command:
  sudo curl -L http://bit.ly/ics355_scratchraw | sudo bash
+ 
+ # WoL
+ Wake on Lan scripts that send the magic packet to turn on each machine. Just run the shell script and it will do it all.
 
