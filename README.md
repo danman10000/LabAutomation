@@ -2,10 +2,12 @@
 Tools that will be used to help automate a lab in an education environment.
 
 There are 3 components:
+* setup - initial system setup scripts.
 * ScriptRunner - a SSH automation script
 * Scripts - A user driven script for quick changes.
 * WoL - Wake on Lan scripts for the lab
 
+# Setup
 Each station needs an SSH server to be installed and associated configuration scripts set up. Also iptables must allow incoming connections to the SSH server. The setup_system.sh script attempts to do all of this. I recommend coping it to a USB drive and running on each system.
 
 # ScriptRunner
