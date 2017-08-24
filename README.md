@@ -6,6 +6,8 @@ There are 3 components:
 * Scripts - A user driven script for quick changes.
 * WoL - Wake on Lan scripts for the lab
 
+Each station needs an SSH server to be installed and associated configuration scripts set up. Also iptables must allow incoming connections to the SSH server. The setup_system.sh script attempts to do all of this. I recommend coping it to a USB drive and running on each system.
+
 # ScriptRunner
 This is a SSH automation script that will automatically login to each IP within a range and execute a script. It can be execute using the following command:
  
