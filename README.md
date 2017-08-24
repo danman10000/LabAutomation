@@ -18,4 +18,7 @@ This is a very simply scratch space used to rapidly deploy tools. It is meant to
  
  # WoL
  Wake on Lan scripts that send the magic packet to turn on each machine. Just run the shell script and it will do it all.
+ 
+ Requires wakeonlan
+  sudo apt-get install wakeonlan
 
