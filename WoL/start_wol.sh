@@ -1,0 +1,1 @@
+wakeonlan -f lab.wol
