@@ -4,11 +4,15 @@ import time
 import ConfigParser
 import uuid
 import os.path
+import traceback
+import base64
 
 #USER_CONFIG="administrator"
 USER_CONFIG="administrator"
 SCRIPT_TO_RUN="auto_script.sh"
 TEMP_DIR="/tmp"
+#In some cases it is better to send an entire script to a temp file, execute the script, and move onto the next box. This will do exactly that. Otherwise it runs the commands one at a time.
+USE_TEMP_FILE=False
 
 #Allowed user types
 ROOT=1
@@ -106,21 +110,32 @@ def do_ssh_runcmd():
             #disable_paging(remote_conn)
 
             remote_conn.send("\n")
-            for sLine in sScript:
-                if not sLine.startswith("#"):
-                    # Now let's try to send a command
-                    remote_conn.send("echo '" + sLine.strip() + "' >> " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
+            if USE_TEMP_FILE:
+                for sLine in sScript:
+                    if not sLine.startswith("#") and not len(sLine.strip())<=1:
+                        # Now let's try to send a command
+                        remote_conn.send("echo '" + sLine.strip() + "' >> " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
 
-                    # Wait for the command to complete
-                    time.sleep(.5)
+                        # Wait for the command to complete
+                        time.sleep(.2)
                     
-                    output = remote_conn.recv(5000)
-                    print output
+                        output = remote_conn.recv(5000)
+                        print output
             
-            sShCommand="nohup sh " + os.path.join(TEMP_DIR,sTmpFileName) + " && rm " + os.path.join(TEMP_DIR,sTmpFileName) + " && exit\n"
+                sShCommand="nohup sh " + os.path.join(TEMP_DIR,sTmpFileName) + " && rm " + os.path.join(TEMP_DIR,sTmpFileName) + " && exit\n"
+            else:
+                #send the date command as the first command so that you know when it was started.
+                sRunCmd="date"
+                for sLine in sScript:
+                    if not sLine.startswith("#") and not len(sLine.strip())<=1:
+                        sRunCmd=sRunCmd + " && " + sLine.strip()
+                #Due the variety of escapes and things in scripts you need to base64 it before sending it over
+                b64ShCmd=base64.standard_b64encode(sRunCmd)
+                sShCommand="nohup echo '" + b64ShCmd + "' | base64 -d | sh && exit\n"
             if USERTYPES[usertype]==ROOT:
                 print "!!!!Executing as ROOT!!!!"
                 sShCommand="set +o history && echo '" + password + "' | sudo --stdin " + sShCommand
+            print "\n\n Running Command:" + sShCommand +"\n\n"
             remote_conn.send(sShCommand)
             #remote_conn.send("sh " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
             # Wait for the command to complete
@@ -129,9 +144,11 @@ def do_ssh_runcmd():
             # Wait for the command to complete
             #time.sleep(3)
             output = remote_conn.recv(5000)
-            print output
-        except:
-            print "!!!! Error connecting to " + ip
+            print "Client Returned:", output
+        except Exception as e: 
+            print(e)
+            traceback.print_exc()
+            #print "!!!! Error connecting to " + ip
             continue
 
 if __name__ == '__main__':
