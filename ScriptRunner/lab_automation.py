@@ -12,7 +12,7 @@ USER_CONFIG="administrator"
 SCRIPT_TO_RUN="auto_script.sh"
 TEMP_DIR="/tmp"
 #In some cases it is better to send an entire script to a temp file, execute the script, and move onto the next box. This will do exactly that. Otherwise it runs the commands one at a time.
-USE_TEMP_FILE=False
+USE_TEMP_FILE=True
 
 #Allowed user types
 ROOT=1
@@ -114,10 +114,11 @@ def do_ssh_runcmd():
                 for sLine in sScript:
                     if not sLine.startswith("#") and not len(sLine.strip())<=1:
                         # Now let's try to send a command
+                        print "Sending: " + "echo '" + sLine.strip() + "' >> " + os.path.join(TEMP_DIR,sTmpFileName)
                         remote_conn.send("echo '" + sLine.strip() + "' >> " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
 
                         # Wait for the command to complete
-                        time.sleep(.2)
+                        time.sleep(.3)
                     
                         output = remote_conn.recv(5000)
                         print output
