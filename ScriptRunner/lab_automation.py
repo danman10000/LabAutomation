@@ -6,6 +6,7 @@ import uuid
 import os.path
 import traceback
 import base64
+import threading
 
 #USER_CONFIG="administrator"
 USER_CONFIG="administrator"
@@ -81,6 +82,7 @@ def do_ssh_runcmd():
     
     sTmpFileName=str(uuid.uuid1())+".sh"
     for ip in get_ip_list():
+        print "########### IP:",ip
         username,password,usertype = get_creds(USER_CONFIG)
 
         # Create instance of SSHClient object
@@ -111,8 +113,11 @@ def do_ssh_runcmd():
 
             remote_conn.send("\n")
             if USE_TEMP_FILE:
+                bInMultiLineComment=False
                 for sLine in sScript:
-                    if not sLine.startswith("#") and not len(sLine.strip())<=1:
+                    if sLine.startswith("'''"): 
+                        bInMultiLineComment= not bInMultiLineComment
+                    if not sLine.startswith("#") and not sLine.startswith("'''") and not len(sLine.strip())<=1 and bInMultiLineComment==False:
                         # Now let's try to send a command
                         print "Sending: " + "echo '" + sLine.strip() + "' >> " + os.path.join(TEMP_DIR,sTmpFileName)
                         remote_conn.send("echo '" + sLine.strip() + "' >> " + os.path.join(TEMP_DIR,sTmpFileName) + "\n")
@@ -147,6 +152,7 @@ def do_ssh_runcmd():
             output = remote_conn.recv(5000)
             print "Client Returned:", output
         except Exception as e: 
+            print "EXCEPTION for IP: ",ip
             print(e)
             traceback.print_exc()
             #print "!!!! Error connecting to " + ip
@@ -154,3 +160,41 @@ def do_ssh_runcmd():
 
 if __name__ == '__main__':
     do_ssh_runcmd()
+    
+'''
+	
+    You'll need to put the calls into separate threads (or processes, but that would be overkill) which in turn requires the code to be in a function (which is a good idea anyway: don't have substantial code at a module's top level).
+
+    For example:
+
+    import sys, os, string, threading
+    import paramiko
+
+    cmd = "grep -h 'king' /opt/data/horror_20100810*"
+
+    outlock = threading.Lock()
+
+    def workon(host):
+
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(host, username='xy', password='xy')
+        stdin, stdout, stderr = ssh.exec_command(cmd)
+        stdin.write('xy\n')
+        stdin.flush()
+
+        with outlock:
+            print stdout.readlines()
+
+    def main():
+        hosts = ['10.10.3.10', '10.10.4.12', '10.10.2.15', ] # etc
+        threads = []
+        for h in hosts:
+            t = threading.Thread(target=workon, args=(h,))
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
+
+    main()
+    '''
