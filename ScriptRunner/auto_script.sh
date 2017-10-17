@@ -1,3 +1,4 @@
+'''
 ###############
 # Support Functions
 # Examples taken from here: https://github.com/ghoulmann/Raspliance-Core/blob/master/compile_tklpatch.sh
@@ -18,7 +19,7 @@ purge ()
         -o DPkg::Options::=--force-confold \
 	purge $@
 }
-
+'''
 ###############
 #Common Tasks
 ###############
@@ -30,6 +31,7 @@ sudo chown -R administrator:administrator ~/*
 sudo shutdown -h now
 exit
 ###############
+
 
 ###############
 #Setup Stuff
@@ -75,6 +77,21 @@ exit
 #Demo Prep
 ################################################
 ################################################
+##############
+#DES Demo
+#mkdir ~/ics355_demos
+#cd ~/ics355_demos
+#rm demo_crypt.py
+#wget https://raw.githubusercontent.com/danman10000/ics355_demos/master/demo_crypt.py
+#wget https://raw.githubusercontent.com/danman10000/ics355_demos/master/Entropy.sh
+#sudo chown administrator:administrator *
+#sudo apt-get update
+#sudo apt-get install -y netpbm
+#sudo apt-get install -y pv
+#sudo apt-get install -y rng-tools
+#sudo pip install pycrypto
+#sudo pip install crcmod
+
 ##############
 #Crypt Tools
 # gnupg
